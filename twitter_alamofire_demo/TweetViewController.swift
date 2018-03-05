@@ -9,6 +9,12 @@
 import UIKit
 
 class TweetViewController: UIViewController {
+    
+    var tweet:Tweet? {
+        didSet{
+            
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
