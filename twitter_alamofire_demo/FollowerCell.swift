@@ -9,6 +9,12 @@
 import UIKit
 
 class FollowerCell: UITableViewCell {
+    
+    var tweet: Tweet!
+    
+    @IBOutlet weak var profile: UIImageView!
+    @IBOutlet weak var screenNameLabel: UILabel!
+    @IBOutlet weak var usernameLabel: UILabel!
 
     override func awakeFromNib() {
         super.awakeFromNib()
