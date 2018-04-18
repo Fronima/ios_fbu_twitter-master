@@ -19,14 +19,13 @@ class TweetComposeViewController: UIViewController , UITextViewDelegate{
     @IBOutlet weak var characterCount: UIBarButtonItem!
   
     var delegate: ComposeViewControllerDelegate?
+
+    var tweet : Tweet?
     
-    var tweet : Tweet?{
-        didSet{
-            
-            
-        }
+    
+    @IBAction func cancelButton(_ sender: Any) {
+        navigationController?.popViewController(animated: true)
     }
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,6 +34,7 @@ class TweetComposeViewController: UIViewController , UITextViewDelegate{
         profileImage.af_setImage(withURL: (User.current?.profileImageUrl!)!)
         tweetView.delegate = self
         characterCount.title = ""
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -43,13 +43,21 @@ class TweetComposeViewController: UIViewController , UITextViewDelegate{
     }
     
     @IBAction func repostButton(_ sender: Any) {
-        APIManager.shared.composeTweet(with: tweetView.text){
+        var parameters : [String : Any] = [:]
+        if let tweet = tweet{
+            parameters = ["status" : tweetView.text, "in_reply_to_status_id" : tweet.id]
+        }else{
+            parameters = ["status" : tweetView.text]
+        }
+        
+        APIManager.shared.composeTweet(with: parameters){
             (tweet: Tweet?, error: Error?) in
             if let error = error{
                 print(error.localizedDescription)
             }else if let tweet = tweet{
                 self.delegate?.did(post: tweet)
                 print("success")
+                self.navigationController?.popViewController(animated: true)
             }
         }
     }

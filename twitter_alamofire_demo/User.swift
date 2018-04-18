@@ -17,23 +17,31 @@ class User {
     private static var _current: User?
     var backgroundImageUrl: URL?
     var bigBackgroundImageUrl: URL?
+    //var profileBannerUrl: URL?
     var tweets: Int
     var followers: Int
     var following : Int
-    
+    var id: Int
     
     
     init(dictionary: [String: Any]) {
         self.dictionary = dictionary
         screenName = dictionary["name"] as! String
+        id = dictionary["id"] as! Int
         let profileImagePath = dictionary["profile_image_url_https"] as! String
-        let bigProfileImagePath = dictionary["profile_image_url_https"] as! String
-        let backgroundImagePath = dictionary["profile_background_image_url_https"] as! String
+       
+        if let backgroundImagePath = dictionary["profile_background_image_url_https"] as? String{
+        
+            backgroundImageUrl = URL(string: backgroundImagePath)
+            bigBackgroundImageUrl = URL(string: profileImagePath.replacingOccurrences(of: "normal", with: "bigger"))
+        }else{
+            backgroundImageUrl = nil
+            bigBackgroundImageUrl = nil
+        }
         
         name = dictionary["screen_name"] as! String
         profileImageUrl = URL(string: profileImagePath)
-        backgroundImageUrl = URL(string: backgroundImagePath)
-        bigBackgroundImageUrl = URL(string: bigProfileImagePath.replacingOccurrences(of: "normal", with: "bigger"))
+        
         tweets = dictionary["statuses_count"] as! Int
         followers = dictionary["followers_count"] as! Int
         following = dictionary["friends_count"] as! Int

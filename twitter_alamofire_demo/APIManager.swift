@@ -166,10 +166,11 @@ class APIManager: SessionManager {
         post(urlString: urlString, parameters: [:], completion: completion)
     }
     // MARK: TODO: Compose Tweet
-    func composeTweet(with text: String, completion: @escaping (Tweet?, Error?) -> ()) {
+    func composeTweet(with parameters: Parameters, completion: @escaping (Tweet?, Error?) -> ()) {
         let urlString = "https://api.twitter.com/1.1/statuses/update.json"
-        let parameters = ["status": text]
-        oauthManager.client.post(urlString, parameters: parameters, headers: nil, body: nil, success: { (response: OAuthSwiftResponse) in
+        
+        oauthManager.client.post(urlString, parameters: parameters, headers: nil, body: nil, success: {
+            (response: OAuthSwiftResponse) in
             let tweetDictionary = try! response.jsonObject() as! [String: Any]
             let tweet = Tweet(dictionary: tweetDictionary)
             completion(tweet, nil)
@@ -182,7 +183,7 @@ class APIManager: SessionManager {
         
         // This uses tweets from disk to avoid hitting rate limit. Comment out if you want fresh
         // tweets,
-        if let data = UserDefaults.standard.object(forKey: "hometimeline_tweets") as? Data {
+        if let data = UserDefaults.standard.object(forKey: "usertimeline_tweets") as? Data {
             let tweetDictionaries = NSKeyedUnarchiver.unarchiveObject(with: data) as! [[String: Any]]
             let tweets = tweetDictionaries.flatMap({ (dictionary) -> Tweet in
                 Tweet(dictionary: dictionary)
@@ -208,7 +209,7 @@ class APIManager: SessionManager {
                     }
                     
                     let data = NSKeyedArchiver.archivedData(withRootObject: tweetDictionaries)
-                    UserDefaults.standard.set(data, forKey: "hometimeline_tweets")
+                    UserDefaults.standard.set(data, forKey: "usertimeline_tweets")
                     UserDefaults.standard.synchronize()
                     
                     let tweets = tweetDictionaries.flatMap({ (dictionary) -> Tweet in
@@ -217,6 +218,129 @@ class APIManager: SessionManager {
                     
                     
                     completion(tweets, nil)
+                }
+        }
+    }
+    fileprivate func getList(user: User, url: URL, parameters: Parameters, completion: @escaping ([User]? , Error?) -> ()){
+        request(url, method: .get, parameters: parameters, encoding: URLEncoding.queryString)
+            .validate()
+            .responseJSON{ (response) in
+                switch response.result {
+                case .failure(let error):
+                    completion(nil, error)
+                    return
+                case .success:
+                    guard let tweetDictionaries = response.result.value as? [[String: Any]] else {
+                        print("Failed to parse users")
+                        let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Failed to parse Users"])
+                        completion(nil, error)
+                        return
+                    }
+                    
+                    let data = NSKeyedArchiver.archivedData(withRootObject: tweetDictionaries)
+                    UserDefaults.standard.set(data, forKey: "userFollowers")
+                    UserDefaults.standard.synchronize()
+                    
+                    let users = tweetDictionaries.flatMap({ (dictionary) -> User in
+                        User(dictionary: dictionary)
+                    })
+                    
+                    
+                    completion(users, nil)
+                }
+        }
+    }
+    //Get Followers
+    func getFollowers(user: User, completion: @escaping ([User]? , Error? ) -> ()){
+        
+        if let data = UserDefaults.standard.object(forKey: "userFollowers") as? Data {
+            let UserDictionaries = NSKeyedUnarchiver.unarchiveObject(with: data) as! [[String: Any]]
+            let users = UserDictionaries.flatMap({ (dictionary) -> User in
+                User(dictionary: dictionary)
+            })
+            
+            completion(users, nil)
+            return
+            
+            
+        }
+        
+        request(URL(string: "https://api.twitter.com/1.1/followers/list.json")!, method: .get)
+            .validate()
+            .responseJSON { (response) in
+                switch response.result {
+                case .failure(let error):
+                    completion(nil, error)
+                    return
+                case .success:
+                    guard let userDictionaries = response.result.value as? [String: Any] else {
+                        print("Failed to parse users: following")
+                        let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Failed to parse Users"])
+                        completion(nil, error)
+                        return
+                    }
+                    
+                    
+                    
+                    let userArray = userDictionaries["users"] as! [[String: Any]]
+                    
+                    let data = NSKeyedArchiver.archivedData(withRootObject: userArray)
+                    UserDefaults.standard.set(data, forKey: "userFollowers")
+                    UserDefaults.standard.synchronize()
+                    print("user: \(userArray)")
+                    let users = userArray.flatMap({ (dictionary) -> User in
+                        User(dictionary: dictionary)
+                    })
+                    
+                    
+                    completion(users, nil)
+                }
+        }
+    }
+    
+    //Get Following
+    func getFollowing(completion: @escaping ([User]? , Error? ) -> ()){
+        if let data = UserDefaults.standard.object(forKey: "userFollowing") as? Data {
+            let UserDictionaries = NSKeyedUnarchiver.unarchiveObject(with: data) as! [[String: Any]]
+            let users = UserDictionaries.flatMap({ (dictionary) -> User in
+                User(dictionary: dictionary)
+            })
+ 
+            completion(users, nil)
+            return
+            
+            
+        }
+        
+        request(URL(string: "https://api.twitter.com/1.1/friends/list.json?cursor=-1")!, method: .get)
+            .validate()
+            .responseJSON { (response) in
+                switch response.result {
+                case .failure(let error):
+                    completion(nil, error)
+                    return
+                case .success:
+                    guard let userDictionaries = response.result.value as? [String: Any] else {
+                        print("Failed to parse users: following")
+                        let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Failed to parse Users"])
+                        completion(nil, error)
+                        return
+                    }
+                    
+                    
+                    
+                    let userArray = userDictionaries["users"] as! [[String: Any]]
+                    
+                    let data = NSKeyedArchiver.archivedData(withRootObject: userArray)
+                    UserDefaults.standard.set(data, forKey: "userFollowing")
+                    UserDefaults.standard.synchronize()
+                    print("user: \(userArray)")
+                    let users = userArray.flatMap({ (dictionary) -> User in
+                        User(dictionary: dictionary)
+                    })
+ 
+                    
+                    completion(users, nil)
                 }
         }
     }

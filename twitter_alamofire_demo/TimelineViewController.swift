@@ -10,8 +10,7 @@ import UIKit
 import AlamofireImage
 
 
-class TimelineViewController: UIViewController, UITableViewDelegate, UITableViewDataSource{
-    
+class TimelineViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, ComposeViewControllerDelegate{
     
     var tweets: [Tweet] = []
     var currentTweet : Tweet?
@@ -31,7 +30,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
         refresh.addTarget(self, action: #selector(refreshControlAction(_:)), for: .valueChanged)
         tableView.refreshControl = refresh
         getTweets()
-        print("tweet 3: \(tweets[3])")
+        
         
     }
     
@@ -49,6 +48,12 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
                 print("Error getting home timeline: " + error.localizedDescription)
             }
         }
+    }
+    
+    func did(post: Tweet) {
+        tweets.insert(post, at: 0)
+        tableView.reloadData()
+        print("posted tweet to timeline")
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -97,14 +102,16 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
         if let  indexPath = tableView.indexPathForSelectedRow {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TweetCell", for: indexPath) as? TweetCell
             
-            print("index path: \(indexPath.row) ")
+            
             if(segue.identifier == "detailSegue"){
                 if let vc = segue.destination as? TweetDetailViewController{
                     vc.tweet = cell?.tweet
+                    
                 }
             }else{
                 if let vc = segue.destination as? TweetComposeViewController{
                     vc.tweet = tweets[indexPath.row]
+                    vc.delegate = self
                 }
             }
         }

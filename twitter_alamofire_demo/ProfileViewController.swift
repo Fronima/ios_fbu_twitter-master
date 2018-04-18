@@ -8,42 +8,52 @@
 
 import UIKit
 
-class ProfileViewController: UIViewController {
+class ProfileViewController: UIViewController{
+    
 
     @IBOutlet weak var profileImage: UIImageView!
     @IBOutlet weak var backgroundImage: UIImageView!
     @IBOutlet weak var tweetsLabel: UILabel!
     @IBOutlet weak var followingLabel: UILabel!
     @IBOutlet weak var followerLabel: UILabel!
-    @IBOutlet weak var tweetTable: UITableView!
-    @IBOutlet weak var followingTable: UITableView!
-    @IBOutlet weak var followersTable: UITableView!
+    @IBOutlet weak var TweetView: UIView!
+    @IBOutlet weak var FollowingView: UIView!
+    @IBOutlet weak var FollowersView: UIView!
+    
+    
+    
     
     var user = User.current
+    
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         profileImage.af_setImage(withURL: (user?.profileImageUrl!)!)
         // Do any additional setup after loading the view.
+        tweetsLabel.text = user?.tweets.description
+        followerLabel.text = user?.followers.description
+        followingLabel.text = user?.following.description
+        
     }
 
     @IBAction func viewPicker(_ sender: UISegmentedControl) {
         switch sender.selectedSegmentIndex {
         case 0:
             //tweets
-            tweetTable.isHidden = false
-            followingTable.isHidden = true
-            followersTable.isHidden = true
+            TweetView.isHidden = false
+            FollowingView.isHidden = true
+            FollowersView.isHidden = true
         case 1:
             //following
-            tweetTable.isHidden = true
-            followingTable.isHidden = false
-            followersTable.isHidden = true
+            TweetView.isHidden = true
+            FollowingView.isHidden = false
+            FollowersView.isHidden = true
         default:
             //followers
-            tweetTable.isHidden = true
-            followingTable.isHidden = true
-            followersTable.isHidden = false
+            TweetView.isHidden = true
+            FollowingView.isHidden = true
+            FollowersView.isHidden = false
         }
     }
     override func didReceiveMemoryWarning() {

@@ -10,7 +10,13 @@ import UIKit
 
 class FollowingCell: UITableViewCell {
     
-    var tweet: Tweet!
+    var user: User!{
+        didSet{
+            profile.af_setImage(withURL: user.profileImageUrl!)
+            screenNameLabel.text = user.screenName
+            usernameLabel.text = user.name
+        }
+    }
 
     @IBOutlet weak var profile: UIImageView!
     @IBOutlet weak var screenNameLabel: UILabel!
@@ -19,6 +25,8 @@ class FollowingCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
+        profile.layer.cornerRadius = profile.bounds.size.height/2
+        profile.clipsToBounds = true
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
